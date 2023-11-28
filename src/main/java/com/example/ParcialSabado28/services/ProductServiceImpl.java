@@ -4,10 +4,14 @@ import com.example.ParcialSabado28.controller.CreateOrderRequestDto;
 import com.example.ParcialSabado28.controller.CustomProductDto;
 import com.example.ParcialSabado28.controller.OrderDto;
 import com.example.ParcialSabado28.controller.ProductDto;
+import com.example.ParcialSabado28.excepctions.CategoryNotFoundException;
+import com.example.ParcialSabado28.excepctions.SupplierNotFoundException;
 import com.example.ParcialSabado28.model.Order;
 import com.example.ParcialSabado28.model.Product;
+import com.example.ParcialSabado28.repository.CategoryRepository;
 import com.example.ParcialSabado28.repository.ProductRepository;
 import com.example.ParcialSabado28.repository.IdentifierRepository;
+import com.example.ParcialSabado28.repository.SupplierRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -27,6 +31,8 @@ public class ProductServiceImpl implements IProductService {
     ProductDtoMapper productDtoMapper;
     ProductMapper productMapper;
     IdentifierRepository identifierRepository;
+    CategoryRepository categoryRepository;
+    SupplierRepository supplierRepository;
     @Override
     public List<ProductDto> getAllProducts() {
         List<Product> products = productRepository.findAll();
@@ -66,6 +72,14 @@ public class ProductServiceImpl implements IProductService {
         return optionalProduct.map(productDtoMapper).orElseThrow();
     }
     public List<CustomProductDto> findProductsByCustomCriteria(Integer supplierId, Integer categoryId, Integer stockMin) {
+        // Verifica si el supplier existe
+        if (!supplierRepository.existsById(supplierId)) {
+            throw new SupplierNotFoundException("Proveedor con ID " + supplierId + " no encontrado.");
+        }
+        // Verifica si la categoría existe
+        if (!categoryRepository.existsById(categoryId)) {
+            throw new CategoryNotFoundException("Categoría con ID " + categoryId + " no encontrada.");
+        }
         List<Product> products = productRepository.findCustomProducts(supplierId, categoryId, stockMin);
         return products.stream()
                 .map(product -> {

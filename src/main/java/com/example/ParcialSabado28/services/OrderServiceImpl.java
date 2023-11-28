@@ -2,6 +2,7 @@ package com.example.ParcialSabado28.services;
 
 import com.example.ParcialSabado28.controller.CreateOrderRequestDto;
 import com.example.ParcialSabado28.controller.OrderDto;
+import com.example.ParcialSabado28.excepctions.*;
 import com.example.ParcialSabado28.model.*;
 import com.example.ParcialSabado28.repository.*;
 import lombok.AccessLevel;
@@ -28,6 +29,8 @@ public class OrderServiceImpl implements IOrderService {
     CustomerRepository customerRepository;
     EmployeeRepository employeeRepository;
     ShipperRepository shipperRepository;
+    SupplierRepository supplierRepository;
+    CategoryRepository categoryRepository;
 
 
     @Override
@@ -77,10 +80,25 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     public OrderDto createCustomOrder(CreateOrderRequestDto dto) {
-        // Obtener el cliente, empleado y transportista basados en los IDs proporcionados por parametro
-        Customer customer = customerRepository.findById(dto.getCustomerId()).orElseThrow();
-        Employee employee = employeeRepository.findById(dto.getEmployeeId()).orElseThrow();
-        Shipper shipper = shipperRepository.findById(dto.getShipperId()).orElseThrow();
+        if (dto.getStockRequired() < 0) {
+            throw new NegativeStockException("El stock requerido no puede ser negativo.");
+        }
+
+        Customer customer = customerRepository.findById(dto.getCustomerId())
+                .orElseThrow(() -> new CustomerNotFoundException("Cliente con ID " + dto.getCustomerId() + " no encontrado."));
+
+        Employee employee = employeeRepository.findById(dto.getEmployeeId())
+                .orElseThrow(() -> new EmployeeNotFounException("Empleado con ID " + dto.getEmployeeId() + " no encontrado."));
+
+        Shipper shipper = shipperRepository.findById(dto.getShipperId())
+                .orElseThrow(() -> new ShipperNotFoundException("Transportista con ID " + dto.getShipperId() + " no encontrado."));
+        Supplier supplier = supplierRepository.findById(dto.getSupplierId())
+                .orElseThrow(() -> new SupplierNotFoundException("Proveedor con ID " + dto.getSupplierId() + " no encontrado."));
+
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new CategoryNotFoundException("Categoría con ID " + dto.getCategoryId() + " no encontrada."));
+
+
       /*Mas adelante este customer, employye y shipper se setearan como properties de la nueva order a crear,
       sumado a que servira para settear otras properties de order como : ship name, ship address, etc
        */
@@ -103,6 +121,9 @@ public class OrderServiceImpl implements IOrderService {
                     return new OrderDetail(new OrderDetailId(), null, product, product.getUnitPrice(), quantityToOrder, discount);
                 })
                 .collect(Collectors.toList());
+        if (orderDetails.isEmpty()) {
+            throw new NoAvailableProductsException("No existen productos en condiciones de ser pedidos.");
+        }
 
         // Crear y configurar la orden
         Order order = new Order();

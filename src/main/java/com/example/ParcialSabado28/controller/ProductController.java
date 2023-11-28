@@ -30,17 +30,12 @@ public class ProductController {
             @RequestParam Integer categoryId,
             @RequestParam Integer stockMin) {
 
-        try {
             List<CustomProductDto> products = productService.findProductsByCustomCriteria(supplierId, categoryId, stockMin);
             if (products.isEmpty()) {
-                // Aquí asumimos que tanto supplierId como categoryId son válidos, pero no hay productos que cumplan con los criterios
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
             }
             return new ResponseEntity<>(products, HttpStatus.OK); // 200 OK
-        } catch (Exception e) {
-            // Esto ocurre si supplierId y/o categoryId no son válidos
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
-        }
+
     }
 
     @GetMapping("/{productId}")

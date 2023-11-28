@@ -64,22 +64,10 @@ public class OrderController {
 
     @PostMapping("/custom")
     public ResponseEntity<OrderDto> createCustomOrder(@RequestBody CreateOrderRequestDto createOrderRequestDto) {
-        try {
-            OrderDto createdOrder = orderService.createCustomOrder(createOrderRequestDto);
 
-            // Retorna 201 Created si la operación fue exitosa
+            OrderDto createdOrder = orderService.createCustomOrder(createOrderRequestDto);
             return new ResponseEntity<>(createdOrder, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            if ("No hay productos elegibles para el pedido.".equals(e.getMessage())) {
-                // Retorna 204 No Content si no hay productos elegibles
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-            // Aquí puedes manejar otros tipos de IllegalArgumentException si los hay
-        } catch (Exception e) {
-            // Retorna 404 Not Found si algún ID relacionado no existe
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR); // Retorna 500 si hay un error no esperado
+
     }
 
 }
